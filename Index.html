@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BG Cinema - Безплатни филми</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #0f0f1a;
+      color: white;
+      min-height: 100vh;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+    
+    h1 {
+      margin-bottom: 10px;
+      color: #e50914;
+      font-size: 2.2rem;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 0;
+      padding: 0 15px;
+    }
+    
+    .search-box {
+      display: flex;
+      max-width: 500px;
+      width: 100%;
+    }
+    
+    #search-input {
+      padding: 12px;
+      flex-grow: 1;
+      border: none;
+      border-radius: 4px 0 0 4px;
+      font-size: 16px;
+      background: #2c2c44;
+      color: white;
+    }
+    
+    #search-button {
+      padding: 12px 20px;
+      background: linear-gradient(to right, #e50914, #b00710);
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    #search-button:hover {
+      background: linear-gradient(to right, #b00710, #e50914);
+    }
+    
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    select, .filter-btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      background: #2c2c44;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    select:hover, .filter-btn:hover {
+      background: #3c3c54;
+    }
+    
+    #movies-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 25px;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .movie-card {
+      background: #1a1a2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    
+    .movie-poster {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-bottom: 2px solid #e50914;
+    }
+    
+    .movie-info {
+      padding: 15px;
+    }
+    
+    .movie-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .movie-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    
+    .movie-rating {
+      color: #f5c518;
+    }
+    
+    .movie-year {
+      color: #aaa;
+    }
+    
+    .no-results {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 18px;
+      color: #aaa;
+      grid-column: 1 / -1;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      grid-column: 1 / -1;
+    }
+    
+    /* Movie Details */
+    .movie-details {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 100;
+      display: none;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .details-container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: #1a1a2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(229, 9, 20, 0.3);
+    }
+    
+    .details-header {
+      position: relative;
+    }
+    
+    .details-backdrop {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      opacity: 0.7;
+    }
+    
+    .details-poster {
+      position: absolute;
+      bottom: -50px;
+      left: 30px;
+      width: 150px;
+      border-radius: 8px;
+      border: 3px solid white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+    
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    .back-button:hover {
+      background: #e50914;
+    }
+    
+    .details-content {
+      padding: 30px;
+      margin-top: 50px;
+    }
+    
+    .details-title {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #e50914;
+    }
+    
+    .details-meta {
+      margin-bottom: 20px;
+      color: #aaa;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .details-overview {
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    
+    .details-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .genre-tag {
+      background: #e50914;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    
+    @media (max-width: 768px) {
+      #movies-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .details-poster {
+        width: 120px;
+        left: 20px;
+        bottom: -40px;
+      }
+      
+      .details-content {
+        padding: 20px;
+        margin-top: 40px;
+      }
+      
+      .details-title {
+        font-size: 22px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .search-box {
+        width: 100%;
+      }
+      
+      .details-poster {
+        position: static;
+        width: 150px;
+        display: block;
+        margin: -50px auto 20px;
+      }
+      
+      .details-content {
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BG Cinema</h1>
+    <p>Безплатни филми без регистрация</p>
+  </header>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Търсене на филм...">
+      <button id="search-button">Търси</button>
+    </div>
+    
+    <div class="filters">
+      <select id="genre-filter">
+        <option value="">Всички жанрове</option>
+      </select>
+      <select id="year-filter">
+        <option value="">Всички години</option>
+      </select>
+      <button id="reset-filters" class="filter-btn">Нулирай</button>
+    </div>
+  </div>
+
+  <div id="movies-container">
+    <div class="loading">Зареждане на филми...</div>
+  </div>
+
+  <div id="movie-details" class="movie-details">
+    <div class="details-container">
+      <div class="details-header">
+        <img id="details-backdrop" class="details-backdrop" src="" alt="Backdrop">
+        <img id="details-poster" class="details-poster" src="" alt="Poster">
+        <button class="back-button">← Назад</button>
+      </div>
+      <div class="details-content">
+        <h2 id="details-title" class="details-title"></h2>
+        <div id="details-meta" class="details-meta"></div>
+        <div id="details-overview" class="details-overview"></div>
+        <div id="details-genres" class="details-genres"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Безплатно API (няма нужда от ключ)
+    const API_URL = 'https://api.themoviedb.org/3';
+    // Използваме публични данни, които не изискват автентикация
+    const PUBLIC_API_KEY = '1ccb076a4cb5ab27e8b5833286f7a5d4'; // Публичен ключ за тестване
+    
+    // DOM елементи
+    const moviesContainer = document.getElementById('movies-container');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const genreFilter = document.getElementById('genre-filter');
+    const yearFilter = document.getElementById('year-filter');
+    const resetFilters = document.getElementById('reset-filters');
+    const movieDetails = document.getElementById('movie-details');
+    const backButton = document.querySelector('.back-button');
+    const loadingElement = document.querySelector('.loading');
+    
+    let currentMovies = [];
+    let genres = [];
+    
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+      showLoading();
+      fetchGenres().then(() => {
+        fetchPopularMovies();
+      });
+    });
+    
+    // Събития
+    searchButton.addEventListener('click', searchMovies);
+    searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && searchMovies());
+    genreFilter.addEventListener('change', filterMovies);
+    yearFilter.addEventListener('change', filterMovies);
+    resetFilters.addEventListener('click', resetAllFilters);
+    backButton.addEventListener('click', hideMovieDetails);
+    
+    // Функции
+    async function fetchGenres() {
+      try {
+        const response = await fetch(`${API_URL}/genre/movie/list?api_key=${PUBLIC_API_KEY}&language=en-US`);
+        const data = await response.json();
+        genres = data.genres;
+        populateGenreFilter();
+        populateYearFilter();
+      } catch (error) {
+        console.error('Грешка при зареждане на жанрове:', error);
+      }
+    }
+    
+    function populateGenreFilter() {
+      genres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre.id;
+        option.textContent = genre.name;
+        genreFilter.appendChild(option);
+      });
+    }
+    
+    function populateYearFilter() {
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= currentYear - 30; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+      }
+    }
+    
+    async function fetchPopularMovies() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_URL}/movie/popular?api_key=${PUBLIC_API_KEY}&language=en-US&page=1`);
+        const data = await response.json();
+        currentMovies = data.results;
+        displayMovies(currentMovies);
+      } catch (error) {
+        console.error('Грешка при зареждане на филми:', error);
+        showError();
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function searchMovies() {
+      const query = searchInput.value.trim();
+      if (!query) {
+        fetchPopularMovies();
+        return;
+      }
+      
+      showLoading();
+      try {
+        const response = await fetch(`${API_URL}/search/movie?api_key=${PUBLIC_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1`);
+        const data = await response.json();
+        currentMovies = data.results;
+        displayMovies(currentMovies);
+      } catch (error) {
+        console.error('Грешка при търсене:', error);
+        showError();
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    function filterMovies() {
+      const selectedGenre = genreFilter.value;
+      const selectedYear = yearFilter.value;
+      
+      let filteredMovies = currentMovies;
+      
+      if (selectedGenre) {
+        filteredMovies = filteredMovies.filter(movie => 
+          movie.genre_ids.includes(parseInt(selectedGenre))
+        );
+      }
+      
+      if (selectedYear) {
+        filteredMovies = filteredMovies.filter(movie => 
+          movie.release_date && movie.release_date.startsWith(selectedYear)
+        );
+      }
+      
+      displayMovies(filteredMovies);
+    }
+    
+    function resetAllFilters() {
+      searchInput.value = '';
+      genreFilter.value = '';
+      yearFilter.value = '';
+      fetchPopularMovies();
+    }
+    
+    function displayMovies(movies) {
+      moviesContainer.innerHTML = '';
+      
+      if (!movies || movies.length === 0) {
+        moviesContainer.innerHTML = '<div class="no-results">Няма намерени филми.</div>';
+        return;
+      }
+      
+      movies.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.className = 'movie-card';
+        movieCard.addEventListener('click', () => showMovieDetails(movie.id));
+        
+        const posterPath = movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` 
+          : 'https://via.placeholder.com/200x300?text=No+Poster';
+        
+        movieCard.innerHTML = `
+          <img src="${posterPath}" alt="${movie.title}" class="movie-poster">
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-meta">
+              <span class="movie-rating">⭐ ${movie.vote_average.toFixed(1)}</span>
+              <span class="movie-year">${movie.release_date ? movie.release_date.split('-')[0] : 'N/A'}</span>
+            </div>
+          </div>
+        `;
+        
+        moviesContainer.appendChild(movieCard);
+      });
+    }
+    
+    async function showMovieDetails(movieId) {
+      showLoading();
+      try {
+        const [movieResponse, creditsResponse] = await Promise.all([
+          fetch(`${API_URL}/movie/${movieId}?api_key=${PUBLIC_API_KEY}&language=en-US`),
+          fetch(`${API_URL}/movie/${movieId}/credits?api_key=${PUBLIC_API_KEY}&language=en-US`)
+        ]);
+        
+        const movie = await movieResponse.json();
+        const credits = await creditsResponse.json();
+        
+        // Показване на детайли
+        document.getElementById('details-title').textContent = movie.title;
+        
+        const backdropPath = movie.backdrop_path 
+          ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` 
+          : 'https://via.placeholder.com/1280x720?text=No+Backdrop';
+        document.getElementById('details-backdrop').src = backdropPath;
+        
+        const posterPath = movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+          : 'https://via.placeholder.com/500x750?text=No+Poster';
+        document.getElementById('details-poster').src = posterPath;
+        
+        // Мета информация
+        const metaInfo = [];
+        if (movie.release_date) metaInfo.push(movie.release_date.split('-')[0]);
+        if (movie.runtime) metaInfo.push(`${movie.runtime} мин.`);
+        if (movie.vote_average) metaInfo.push(`⭐ ${movie.vote_average.toFixed(1)}`);
+        
+        document.getElementById('details-meta').innerHTML = metaInfo.join(' • ');
+        
+        // Описание
+        document.getElementById('details-overview').textContent = 
+          movie.overview || 'Няма налично описание за този филм.';
+        
+        // Жанрове
+        const genresContainer = document.getElementById('details-genres');
+        genresContainer.innerHTML = '';
+        if (movie.genres && movie.genres.length > 0) {
+          movie.genres.forEach(genre => {
+            const genreTag = document.createElement('span');
+            genreTag.className = 'genre-tag';
+            genreTag.textContent = genre.name;
+            genresContainer.appendChild(genreTag);
+          });
+        }
+        
+        // Показване на детайлите
+        moviesContainer.style.display = 'none';
+        movieDetails.style.display = 'block';
+      } catch (error) {
+        console.error('Грешка при зареждане на детайли:', error);
+        showError();
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    function hideMovieDetails() {
+      movieDetails.style.display = 'none';
+      moviesContainer.style.display = 'grid';
+    }
+    
+    function showLoading() {
+      loadingElement.style.display = 'block';
+    }
+    
+    function hideLoading() {
+      loadingElement.style.display = 'none';
+    }
+    
+    function showError() {
+      moviesContainer.innerHTML = '<div class="no-results">Възникна грешка при зареждане на данните. Моля, опитайте по-късно.</div>';
+    }
+  </script>
+</body>
+</html>
